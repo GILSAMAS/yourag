@@ -1,0 +1,224 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: ["main", "develop"]
+  pull_request:
+    branches: ["main", "develop"]
+  workflow_dispatch:  # Allow manual triggering
+
+env:
+  UV_CACHE_DIR: /tmp/.uv-cache
+
+jobs:
+  test:
+    name: Test and Coverage
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+        
+    - name: Set up Python ${{ matrix.python-version }}
+      run: uv python install ${{ matrix.python-version }}
+      
+    - name: Restore uv cache
+      uses: actions/cache@v4
+      with:
+        path: /tmp/.uv-cache
+        key: uv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
+        restore-keys: |
+          uv-${{ runner.os }}-${{ matrix.python-version }}-
+          uv-${{ runner.os }}-
+          
+    - name: Install dependencies
+      run: uv sync --dev
+        
+    - name: Run tests with coverage
+      run: |
+        uv run pytest --cov=src/yourag --cov-report=xml --cov-report=term-missing --cov-fail-under=80 -v
+        
+    - name: Upload coverage to Codecov
+      if: success()
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: false  # Don't fail CI if codecov fails
+        token: ${{ secrets.CODECOV_TOKEN }}
+        
+    - name: Minimize uv cache
+      run: uv cache prune --ci
+
+    - name: Archive coverage reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report-${{ matrix.python-version }}
+        path: |
+          coverage.xml
+          htmlcov/
+
+  build:
+    name: Build Package
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "latest"
+        
+    - name: Set up Python
+      run: uv python install 3.12
+      
+    - name: Install dependencies
+      run: uv sync
+      
+    - name: Build package
+      run: uv build
+      
+    - name: Verify package
+      run: |
+        uv run python -m pip install dist/*.whl
+        uv run python -c "import yourag; print('Package import successful')"
+        
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist
+        path: dist/
+        retention-days: 7
+
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: [test, build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: pypi
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
+      contents: write  # Needed for creating releases
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for proper tagging
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: dist
+        path: dist/
+        
+    - name: Extract version from pyproject.toml
+      id: get_version
+      run: |
+        VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Version: $VERSION"
+        
+    - name: Check if tag exists
+      id: check_tag
+      run: |
+        if git tag -l | grep -q "^v${{ steps.get_version.outputs.version }}$"; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+          echo "Tag v${{ steps.get_version.outputs.version }} already exists"
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "Tag v${{ steps.get_version.outputs.version }} does not exist"
+        fi
+        
+    - name: Create and push tag
+      if: steps.check_tag.outputs.exists == 'false'
+      run: |
+        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git tag -a "v${{ steps.get_version.outputs.version }}" -m "Release v${{ steps.get_version.outputs.version }}"
+        git push origin "v${{ steps.get_version.outputs.version }}"
+        
+    - name: Generate changelog
+      if: steps.check_tag.outputs.exists == 'false'
+      id: changelog
+      run: |
+        # Get the previous tag
+        PREV_TAG=$(git tag -l --sort=-version:refname | head -n 2 | tail -n 1)
+        if [ -z "$PREV_TAG" ]; then
+          PREV_TAG=$(git rev-list --max-parents=0 HEAD)
+        fi
+        
+        # Generate changelog
+        echo "Changes since $PREV_TAG:" > CHANGELOG.md
+        git log $PREV_TAG..HEAD --pretty=format:"- %s (%h)" >> CHANGELOG.md
+        
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        cat CHANGELOG.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+    - name: Create GitHub Release
+      if: steps.check_tag.outputs.exists == 'false'
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: "v${{ steps.get_version.outputs.version }}"
+        release_name: "yourag v${{ steps.get_version.outputs.version }}"
+        body: |
+          ## yourag v${{ steps.get_version.outputs.version }}
+          
+          Your tool for RAG on any source of knowledge.
+          
+          ### Installation
+          
+          ```bash
+          # Install with uv
+          uv add yourag
+          
+          # Install with pip
+          pip install yourag
+          ```
+          
+          ### Usage
+          
+          ```bash
+          yourag init --knowledge https://youtube.com/... --name docker-video
+          yourag query --name docker-video --question "How do I install this?"
+          yourag delete --name myvideo
+          ```
+          
+          ### What's Changed
+          
+          ${{ steps.changelog.outputs.changelog }}
+          
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.get_version.outputs.version }}...HEAD
+        draft: false
+        prerelease: false
+        
+    - name: Publish to PyPI
+      if: steps.check_tag.outputs.exists == 'false'
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        skip-existing: true
+        verbose: true
+        
+    - name: Skip publishing (version exists)
+      if: steps.check_tag.outputs.exists == 'true'
+      run: |
+        echo "⏭️  Skipping publication - version v${{ steps.get_version.outputs.version }} already exists"
+        echo "To publish a new version:"
+        echo "1. Update the version in pyproject.toml"
+        echo "2. Commit and push to main branch"
