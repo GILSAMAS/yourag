@@ -141,6 +141,10 @@ cython_debug/
 # VS Code
 .vscode/
 
+# uv
+.uv/
+uv.lock
+
 # OS generated files
 .DS_Store
 .DS_Store?
