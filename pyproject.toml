@@ -10,8 +10,10 @@ requires-python = ">=3.12"
 dependencies = [
     "black>=25.9.0",
     "google-api-python-client>=2.186.0",
+    "google-auth-oauthlib>=1.2.3",
     "pydantic>=2.12.3",
     "python-dotenv>=1.2.1",
+    "srt>=3.5.3",
 ]
 keywords = ["rag", "ai", "knowledge", "search"]
 classifiers = [
