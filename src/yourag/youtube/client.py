@@ -1,6 +1,18 @@
 import os
 from googleapiclient.discovery import build
 from typing import Optional
+import pickle
+from yourag.core.configs.yt_config import (
+    CREDENTIALS_PICKLE_FILE,
+    YOUTUBE_SECRET_JSON_FILE,
+    OAUTH_ENABLED,
+)
+from google_auth_oauthlib.flow import InstalledAppFlow
+
+# API_SERVICE_NAME = "youtube"
+# API_VERSION = "v3"
+# CLIENT_SECRETS_FILE = YOUTUBE_SECRET_JSON_FILE
+SCOPES = ["https://www.googleapis.com/auth/youtube.force-ssl"]
 
 
 class YouTubeClient:
@@ -20,13 +32,43 @@ class YouTubeClient:
         :param api_key: YouTube Data API key. If not provided, it will be read from the
                         environment variable 'YT_API_KEY'.
         """
-        if self.client is not None:
-            print("YouTubeClient is already initialized.")
-            return  # Client already initialized
-        self.api_key = api_key or os.getenv("YT_API_KEY")
-        if not self.api_key:
-            raise ValueError("No YouTube API key provided.")
-        self.client = build("youtube", "v3", developerKey=self.api_key)
+        if not OAUTH_ENABLED:
+            if self.client is not None:
+                print("YouTubeClient is already initialized.")
+                return  # Client already initialized
+
+            self.api_key = api_key or os.getenv("YT_API_KEY")
+
+            if not self.api_key:
+                print("No YouTube API key provided.")
+                raise ValueError(
+                    "YouTube API key must be provided either as a parameter or via the 'YT_API_KEY' environment variable."
+                )
+
+            self.client = build("youtube", "v3", developerKey=self.api_key)
+
+        else:
+            try:
+                self.client = self._get_authenticated_service()
+            except Exception as e:
+                print(f"Error occurred: {e}")
+                raise e
+
+    def _get_authenticated_service(self):
+        """
+        Authenticate the user and return an authorized YouTube API client.
+        """
+        if os.path.exists(CREDENTIALS_PICKLE_FILE):
+            with open(CREDENTIALS_PICKLE_FILE, "rb") as f:
+                credentials = pickle.load(f)
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                YOUTUBE_SECRET_JSON_FILE, SCOPES
+            )
+            credentials = flow.run_local_server(port=0)
+            with open(CREDENTIALS_PICKLE_FILE, "wb") as f:
+                pickle.dump(credentials, f)
+        return build("youtube", "v3", credentials=credentials)
 
     def get_video_details(self, video_id: str):
         """
@@ -72,3 +114,25 @@ class YouTubeClient:
             )
             .execute()
         )
+
+    def get_transcript(self, video_id: str):
+        """
+        Get the transcript of a YouTube video.
+
+        :param video_id: The YouTube video ID.
+        :return: The transcript as a list of dictionaries with start time, duration, and text
+        """
+        try:
+            # get caption ids
+            captions = (
+                self.client.captions().list(part="snippet", videoId=video_id).execute()
+            )
+            caption_id = captions["items"][0]["id"]
+            # download the captions
+            transcripts = (
+                self.client.captions().download(id=caption_id, tfmt="srt").execute()
+            )
+            return transcripts.decode("utf-8")
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
