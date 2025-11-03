@@ -136,3 +136,37 @@ class YouTubeClient:
         except Exception as e:
             print(f"Error: {e}")
             return None
+
+    def write_comment(self, video_id: str, text: str):
+        """
+        Write a comment on a YouTube video.
+
+        :param video_id: The YouTube video ID.
+        :param text: The text of the comment to post.
+        :return: The posted comment as returned by the YouTube Data API.
+        """
+        request = self.client.commentThreads().insert(
+            part="snippet",
+            body={
+                "snippet": {
+                    "videoId": video_id,
+                    "topLevelComment": {"snippet": {"textOriginal": text}},
+                }
+            },
+        )
+        response = request.execute()
+        return response
+
+    def reply_to_comment(self, comment_id: str, text: str):
+        """
+        Reply to a YouTube comment.
+
+        :param comment_id: The ID of the comment to reply to.
+        :param text: The text of the reply.
+        """
+        request = self.client.comments().insert(
+            part="snippet",
+            body={"snippet": {"parentId": comment_id, "textOriginal": text}},
+        )
+        response = request.execute()
+        print("Reply posted:", response)
