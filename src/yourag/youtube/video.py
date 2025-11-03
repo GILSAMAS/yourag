@@ -3,6 +3,9 @@ from .models import VideoMetadata
 from .models import VideoStatistics
 from .models import VideoComment
 from .models import Comments
+from .models import Transcript
+from .models import TranscriptEntry
+import srt
 
 
 class YTVideo:
@@ -74,4 +77,22 @@ class YTVideo:
             video_id=self.video_id,
             total_comments=total_comments,
             comments=comments_list,
+        )
+
+    def get_transcript(self) -> Transcript:
+        """
+        Gets the transcript of the YouTube video.
+
+        :return: Transcript of the video.
+        """
+        transcript = self.client.get_transcript(self.video_id)
+        transcript_parsed = srt.parse(transcript)
+        transcript_list = [
+            TranscriptEntry(
+                text=t.content, start=t.start, end=t.end, duration=t.end - t.start
+            )
+            for t in transcript_parsed
+        ]
+        return Transcript(
+            video_id=self.video_id, language="en", entries=transcript_list
         )
