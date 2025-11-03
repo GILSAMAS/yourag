@@ -7,7 +7,12 @@ authors = [
     { name = "Manuel Gil", email = "manuelgilsitio@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "black>=25.9.0",
+    "google-api-python-client>=2.186.0",
+    "pydantic>=2.12.3",
+    "python-dotenv>=1.2.1",
+]
 keywords = ["rag", "ai", "knowledge", "search"]
 classifiers = [
     "Development Status :: 3 - Alpha",
