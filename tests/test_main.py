@@ -15,11 +15,11 @@ def test_main_function_runs():
     import io
     import sys
     from contextlib import redirect_stdout
-    
+
     captured_output = io.StringIO()
     with redirect_stdout(captured_output):
         main()
-    
+
     output = captured_output.getvalue()
     assert "Hello from yourag!" in output
 
@@ -29,10 +29,10 @@ def test_main_function_output():
     import io
     import sys
     from contextlib import redirect_stdout
-    
+
     captured_output = io.StringIO()
     with redirect_stdout(captured_output):
         main()
-    
+
     output = captured_output.getvalue().strip()
     assert output == "Hello from yourag!"
