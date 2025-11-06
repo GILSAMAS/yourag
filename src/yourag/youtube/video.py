@@ -1,5 +1,5 @@
-from .client import (
-    YouTubeClient,
+from .client import YouTubeClient
+from .models import (
     VideoMetadata,
     VideoStatistics,
     VideoComment,
