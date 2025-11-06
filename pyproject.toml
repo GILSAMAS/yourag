@@ -16,6 +16,7 @@ dependencies = [
     "pydantic>=2.12.3",
     "python-dotenv>=1.2.1",
     "srt>=3.5.3",
+    "youtube-transcript-api>=1.2.3",
 ]
 keywords = ["rag", "ai", "knowledge", "search"]
 classifiers = [
