@@ -1,6 +1,40 @@
 from openai import OpenAI
 import os
-from . import prompts
+from yourag.ai import prompts
+from yourag.ai.base import EmbeddingModel
+from typing import Optional, List
+
+
+class OpenAIEmbeddingGenerator(EmbeddingModel):
+    """
+    This class generates embeddings using OpenAI's API.
+    """
+
+    def __init__(self, model_name: str = "text-embedding-ada-002"):
+        """
+        Initializes the OpenAIEmbeddingGenerator with the specified model name.
+        
+        :param model_name: The name of the OpenAI embedding model to use.
+        """
+        self.model_name = model_name
+        self.openai_client = get_openai_client()
+
+    def generate_embeddings(self, text: str) -> Optional[List[float]]:
+        """
+        Get embeddings for a given text using OpenAI API.
+
+        :param text: The input text.
+        :return: The embeddings as a list of floats.
+        """
+        try:
+            response = self.openai_client.embeddings.create(
+                input=[text], model=self.model_name
+            )
+            return response.data[0].embedding
+        except Exception as e:
+            print(f"Error getting embeddings: {e}")
+            return None
+
 
 def get_openai_client() -> OpenAI:
     """
@@ -11,25 +45,6 @@ def get_openai_client() -> OpenAI:
         print("OPENAI_API_KEY is not set in environment variables.")
         return None
     return OpenAI(api_key=OPENAI_API_KEY)
-
-
-def get_embeddings(
-    openai_client: OpenAI, text: str, model: str = "text-embedding-ada-002"
-) -> Optional[List[float]]:
-    """
-    Get embeddings for a given text using OpenAI API.
-
-    :param openai_client: The OpenAI client.
-    :param text: The input text.
-    :param model: The embedding model to use.
-    :return: The embeddings as a list of floats.
-    """
-    try:
-        response = openai_client.embeddings.create(input=[text], model=model)
-        return response.data[0].embedding
-    except Exception as e:
-        print(f"Error getting embeddings: {e}")
-        return None
 
 
 def identify_category(user_prompt: str, openai_client) -> str:
