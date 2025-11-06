@@ -1,12 +1,54 @@
 from yourag.utils.file_utils import get_root_project
 from yourag.youtube.client import YouTubeClient
 from yourag.youtube.video import YTVideo
+from yourag.vector_stores.chroma_store import ChromaVectorStore
+from yourag.ai.embeddings import EmbeddingFactory
+from yourag.ai.generators import GeneratorFactory
 from dotenv import load_dotenv
 import os
 
 
 def main() -> None:
-    # load_dotenv()
+    load_dotenv()
+    embedding_generator = EmbeddingFactory.get_embedding_generator("openai")
+    generator = GeneratorFactory.get_generator("openai")
+
+    question = "What is the capital of France?"
+    context = "France is a country in Europe."
+    answer = generator.generate_answer(question, context)
+    print("Generated Answer:")
+    print(answer)
+
+    # chroma_store = ChromaVectorStore()
+
+    # creating a new collection
+    # ids = ["vec1", "vec2", "vec3"]
+    # embeddings = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]]
+    # documents = ["Document 1", "Document 2", "Document 3"]
+    # metadatas = [{"source": "doc1"}, {"source": "doc2"}, {"source": "doc3"}]
+    # collection_name = "test_collection"
+    # # Use the chroma_store for vector operations
+    # chroma_store.add_vectors(
+    #     ids=ids,
+    #     embeddings=embeddings,
+    #     documents=documents,
+    #     collection_name=collection_name,
+    #     metadatas=metadatas,
+    # )
+    # query_vector = [0.1, 0.2, 0.3]
+    # top_k = 2
+    # collection_name = "test_collection"
+    # results = chroma_store.query_vectors(
+    #    query_vector=query_vector, top_k=top_k, collection_name=collection_name
+    # )
+    # print("QUERY RESULTS:")
+    # print(results)
+    # # for result in results:
+    # #     print(result)
+
+
+def main2() -> None:
+    load_dotenv()
     yt_client = YouTubeClient()
     yt_video = YTVideo("_kvuw74LnTw", yt_client)
     # yt_video.post_comment(text="This is a test comment!")

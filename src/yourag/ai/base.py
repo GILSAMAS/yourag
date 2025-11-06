@@ -14,6 +14,7 @@ class EmbeddingModel(ABC):
     def generate_embeddings(self, text: str):
         pass
 
+
 class LLM(ABC):
     """
     Abstract base class for language models.
@@ -23,7 +24,7 @@ class LLM(ABC):
         pass
 
     @abstractmethod
-    def generate_text(self) -> str:
+    def generate_answer(self) -> str:
         """
         Generates text based on the provided prompts.
         """
