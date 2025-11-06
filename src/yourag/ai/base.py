@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
+from typing import Optional, List
 
-from .openai_llm import get_embedding
 
 class EmbeddingModel(ABC):
     """
@@ -9,22 +9,22 @@ class EmbeddingModel(ABC):
 
     def __init__(self):
         pass
-    
+
     @abstractmethod
-    def generate_embedding(self, text: str):
+    def generate_embeddings(self, text: str):
         pass
-        
-class EmbeddingFactory:
 
-    __available_embedding_generators = {
-        "openai": "yourag.ai.openai_embedding.OpenAIEmbeddingGenerator",
-    }
+class LLM(ABC):
+    """
+    Abstract base class for language models.
+    """
 
-    def get_embedding_model(self):
+    def __init__(self):
+        pass
 
-        raise NotImplementedError("Subclasses should implement this method.")
-
-    def get_embedding(self, text: str):
-        raise NotImplementedError("Subclasses should implement this method.")
-
-    
+    @abstractmethod
+    def generate_text(self) -> str:
+        """
+        Generates text based on the provided prompts.
+        """
+        pass
