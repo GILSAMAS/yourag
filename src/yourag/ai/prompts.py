@@ -1,5 +1,3 @@
-
-
 YOUTUBE_COMMENT_REPLY_PROMPT = """
 You are an expert assistant specialized in crafting engaging and contextually relevant replies to YouTube comments.
 Your task is to answer a Youtube comment based on the provided context from the video's transcript. 
