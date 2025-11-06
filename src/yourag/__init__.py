@@ -4,20 +4,34 @@ from yourag.youtube.video import YTVideo
 from yourag.vector_stores.chroma_store import ChromaVectorStore
 from yourag.ai.embeddings import EmbeddingFactory
 from yourag.ai.generators import GeneratorFactory
+from yourag.transcript_api.base import TranscriptApi
 from dotenv import load_dotenv
 import os
+from youtube_transcript_api import YouTubeTranscriptApi
 
 
 def main() -> None:
     load_dotenv()
-    embedding_generator = EmbeddingFactory.get_embedding_generator("openai")
-    generator = GeneratorFactory.get_generator("openai")
+    # api = YouTubeTranscriptApi()
+    # transcript = api.fetch("dQw4w9WgXcQ")
+    # for entry in transcript:
+    #     print(entry.start, entry.duration, entry.text)
+    #     print("-" * 40)
+    tapi = TranscriptApi(video_id="dQw4w9WgXcQ")
+    transcript = tapi.get_transcript()
+    print("VIDEO TRANSCRIPT:")
+    # print("Language:", transcript.language)
+    for entry in transcript.entries:
+        print("-" * 40)
+        print(f"[{entry.start} --> {entry.end}] ({entry.duration}): {entry.text}")
+    # embedding_generator = EmbeddingFactory.get_embedding_generator("openai")
+    # generator = GeneratorFactory.get_generator("openai")
 
-    question = "What is the capital of France?"
-    context = "France is a country in Europe."
-    answer = generator.generate_answer(question, context)
-    print("Generated Answer:")
-    print(answer)
+    # question = "What is the capital of France?"
+    # context = "France is a country in Europe."
+    # answer = generator.generate_answer(question, context)
+    # print("Generated Answer:")
+    # print(answer)
 
     # chroma_store = ChromaVectorStore()
 
