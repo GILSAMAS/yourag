@@ -1,111 +1,66 @@
 from yourag.utils.file_utils import get_root_project
-from yourag.youtube.client import YouTubeClient
-from yourag.youtube.video import YTVideo
 from yourag.vector_stores.chroma_store import ChromaVectorStore
 from yourag.ai.embeddings import EmbeddingFactory
 from yourag.ai.generators import GeneratorFactory
-from yourag.transcript_api.base import TranscriptApi
+from yourag.transcript_api.base import TranscriptApi,TranscriptParser
 from dotenv import load_dotenv
 import os
-from youtube_transcript_api import YouTubeTranscriptApi
-
+import uuid
 
 def main() -> None:
     load_dotenv()
-    # api = YouTubeTranscriptApi()
-    # transcript = api.fetch("dQw4w9WgXcQ")
-    # for entry in transcript:
-    #     print(entry.start, entry.duration, entry.text)
-    #     print("-" * 40)
-    tapi = TranscriptApi(video_id="dQw4w9WgXcQ")
+    tapi = TranscriptApi(video_id="_kvuw74LnTw")
     transcript = tapi.get_transcript()
-    print("VIDEO TRANSCRIPT:")
-    # print("Language:", transcript.language)
-    for entry in transcript.entries:
-        print("-" * 40)
-        print(f"[{entry.start} --> {entry.end}] ({entry.duration}): {entry.text}")
-    # embedding_generator = EmbeddingFactory.get_embedding_generator("openai")
-    # generator = GeneratorFactory.get_generator("openai")
+    parser = TranscriptParser(transcript)
 
-    # question = "What is the capital of France?"
-    # context = "France is a country in Europe."
-    # answer = generator.generate_answer(question, context)
-    # print("Generated Answer:")
-    # print(answer)
+    embedding_generator = EmbeddingFactory.get_embedding_generator("openai")
+    generator = GeneratorFactory.get_generator("openai")
+    chroma_store = ChromaVectorStore()
+    chunks = parser.get_chunks(chunk_size=50, overlap=0.2)
+    embeddings =  {
+        "ids": [],
+        "embeddings": [],
+        "documents": [],
+        "metadatas": [],
+    }
+    for chunk in chunks:
+        embedding = embedding_generator.generate_embeddings(chunk["text"])
+        embeddings["ids"].append(str(uuid.uuid4()))
+        embeddings["embeddings"].append(embedding)
+        embeddings["documents"].append(chunk["text"])
+        embeddings["metadatas"].append({"start": chunk["start"], "end": chunk["end"]})
 
-    # chroma_store = ChromaVectorStore()
-
-    # creating a new collection
-    # ids = ["vec1", "vec2", "vec3"]
-    # embeddings = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]]
-    # documents = ["Document 1", "Document 2", "Document 3"]
-    # metadatas = [{"source": "doc1"}, {"source": "doc2"}, {"source": "doc3"}]
-    # collection_name = "test_collection"
-    # # Use the chroma_store for vector operations
+    collection_name = f"video_{tapi.video_id}"
+    # Use the chroma_store for vector operations
     # chroma_store.add_vectors(
-    #     ids=ids,
-    #     embeddings=embeddings,
-    #     documents=documents,
+    #     ids=embeddings["ids"],
+    #     embeddings=embeddings["embeddings"],
+    #     documents=embeddings["documents"],
     #     collection_name=collection_name,
-    #     metadatas=metadatas,
+    #     metadatas=embeddings["metadatas"],
     # )
-    # query_vector = [0.1, 0.2, 0.3]
-    # top_k = 2
-    # collection_name = "test_collection"
-    # results = chroma_store.query_vectors(
-    #    query_vector=query_vector, top_k=top_k, collection_name=collection_name
-    # )
-    # print("QUERY RESULTS:")
-    # print(results)
-    # # for result in results:
-    # #     print(result)
+
+    # Querying example
+    query_text = "What is the main topic of the video?"
+    query_embedding = embedding_generator.generate_embeddings(query_text)
+    results = chroma_store.query_vectors(
+        query_vector=query_embedding,
+        top_k=3,
+        collection_name=collection_name,
+    )
+    # print("Relevant documents:", results)
+    print(len(results["documents"]))
+    for result in results["documents"]:
+        print(result)
+        print("----")
+    
+    context = " ".join([text for doc in results["documents"] for text in doc])
+    answer = generator.generate_answer(question=query_text, context=context)
+    print("Generated Answer:", answer)
+    # # Generating text based on retrieved documents
+    # context = " ".join([doc["document"] for doc in results])
+    # answer = generator.generate_answer(question=query_text, context=context)
 
 
-def main2() -> None:
-    load_dotenv()
-    yt_client = YouTubeClient()
-    yt_video = YTVideo("_kvuw74LnTw", yt_client)
-    # yt_video.post_comment(text="This is a test comment!")
-    comment_id = "UgzfFDZ_4qQLr7FmHcN4AaABAg"
-    yt_video.post_comment(comment_id=comment_id, text="This is a test reply!")
-    # transcript = yt_video.get_transcript()
 
-    # print("VIDEO TRANSCRIPT:")
-    # print("Language:", transcript.language)
-    # for entry in transcript.entries:
-    #     print("-" * 40)
-    #     print(f"[{entry.start} --> {entry.end}] ({entry.duration}): {entry.text}")
-    # print([t for t in transcript][0])
-    # # details = yt_video.details
-    # # print(details)
-    # statistics = yt_video.get_statistics()
-    # print("VIDEO STATISTICS:")
-    # print(f"Views: {statistics.view_count}")
-    # print(f"Likes: {statistics.like_count}")
-    # print(f"Dislikes: {statistics.dislike_count}")
-    # print(f"Comments: {statistics.comment_count}")
 
-    comments = yt_video.get_comments(max_results=20)
-    print("TOTAL COMMENTS RETRIEVED:", comments.total_comments)
-    print("VIDEO ID:", comments.video_id)
-    print("\nVIDEO COMMENTS:")
-    for comment in comments.comments:
-        print("-" * 40)
-        print(
-            f"- {comment.author}: {comment.text} (Likes: {comment.like_count}, ID: {comment.comment_id})"
-        )
-
-    # print("Hello from yourag!")
-    # metadata = yt_video.get_metadata()
-    # print("TITLE:")
-    # print(metadata.title)
-    # print("PUBLISH DATE:")
-    # print(metadata.publish_date)
-    # print("CHANNEL TITLE:")
-    # print(metadata.channel_title)
-    # print("VIDEO ID:")
-    # print(metadata.video_id)
-    # print("VIDEO TAGS:")
-    # print(metadata.tags)
-    # print("METADATA TYPE:")
-    # print(type(metadata).__name__)
