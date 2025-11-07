@@ -43,7 +43,6 @@ class OpenAIGenerator(LLM):
                 stop=None,
                 temperature=0.7,
             )
-            print(response)
             answer = response.choices[0].message.content.strip()
             return answer
         except Exception as e:
