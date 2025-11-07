@@ -1,5 +1,5 @@
 from youtube_transcript_api import YouTubeTranscriptApi
-from yourag.youtube.models import Transcript, TranscriptEntry
+from yourag.models.transcript import Transcript, TranscriptEntry
 from typing import List, Dict, Any
 
 
