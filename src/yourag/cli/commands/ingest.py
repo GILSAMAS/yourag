@@ -7,9 +7,10 @@ from dotenv import load_dotenv
 import os
 import uuid
 
-def ingest_video(video_id:str):
+
+def ingest_video(video_id: str):
     """
-    This function ingests a Youtube Video by its ID, 
+    This function ingests a Youtube Video by its ID,
     it creates a collection in Chroma vector store with the transcript chunks embeddings.
     :param video_id: The ID of the YouTube video to ingest.
     :return: None
@@ -41,7 +42,6 @@ def ingest_video(video_id:str):
     #     embeddings["documents"].append(chunk["text"])
     #     embeddings["metadatas"].append({"start": str(chunk["start"]), "end": str(chunk["end"]), "duration": str(chunk["duration"])})
 
-    
     # chroma_store.add_vectors(
     #     ids=embeddings["ids"],
     #     embeddings=embeddings["embeddings"],

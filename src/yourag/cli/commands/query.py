@@ -46,7 +46,7 @@ def query_video(video_id: str, query_text: str):
     # for result in results["documents"]:
     #     print(result)
     #     print("----")
-    
+
     # context = " ".join([text for doc in results["documents"] for text in doc])
     # answer = generator.generate_answer(question=query_text, context=context)
     # print("Generated Answer:", answer)

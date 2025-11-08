@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 import os
 import uuid
 
+
 def main() -> None:
     load_dotenv()
     yt_client = YouTubeClient()
@@ -16,13 +17,17 @@ def main() -> None:
     transcript = video.get_transcript()
     print("Transcript retrieved with", len(transcript.entries), "entries.")
     for entry in transcript.entries[:5]:
-        print(f"[{entry.start} - {entry.end}]: {entry.text} - Duration: {entry.duration}\n")
+        print(
+            f"[{entry.start} - {entry.end}]: {entry.text} - Duration: {entry.duration}\n"
+        )
 
     parser = TranscriptParser(transcript)
     chunks = parser.get_chunks(chunk_size=50, overlap=0.2)
     print(f"Generated {len(chunks)} chunks from the transcript.")
     for chunk in chunks:
-        print(f"Duration: {chunk['duration']} - [{chunk['start']} - {chunk['end']}]: {chunk['text']}\n")
+        print(
+            f"Duration: {chunk['duration']} - [{chunk['start']} - {chunk['end']}]: {chunk['text']}\n"
+        )
     embedding_generator = EmbeddingFactory.get_embedding_generator("openai")
     generator = GeneratorFactory.get_generator("openai")
     chroma_store = ChromaVectorStore()
@@ -63,7 +68,7 @@ def main() -> None:
     for result in results["documents"]:
         print(result)
         print("----")
-    
+
     context = " ".join([text for doc in results["documents"] for text in doc])
     answer = generator.generate_answer(question=query_text, context=context)
     print("Generated Answer:", answer)
@@ -71,7 +76,3 @@ def main() -> None:
     print("Context for answer generation:", context)
     answer = generator.generate_answer(question=query_text, context=context)
     print("Generated Answer:", answer)
-
-
-
-
