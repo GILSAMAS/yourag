@@ -9,10 +9,12 @@ import uuid
 from typing import Dict, List
 
 
-def ingest_video(video_id: str):
+def ingest_video(video_id: str, name: str) -> None:
     """
     This function ingests a Youtube Video by its ID,
     it creates a collection in Chroma vector store with the transcript chunks embeddings.
+
+    :param name: The name to assign to the video collection.
     :param video_id: The ID of the YouTube video to ingest.
     :return: None
     """
@@ -20,6 +22,8 @@ def ingest_video(video_id: str):
     print("Ingesting video with ID:", video_id)
     yt_client = YouTubeClient()
     video = YTVideo(video_id=video_id, client=yt_client)
+    video_metadata = video.get_metadata()
+    print(f"Retrieved video: {video_metadata.title} by {video_metadata.channel_title}")
     transcript = video.get_transcript()
     parser = TranscriptParser(transcript)
     chunks = parser.get_chunks(chunk_size=80, overlap=0.1)
@@ -34,6 +38,12 @@ def ingest_video(video_id: str):
         documents=embeddings["documents"],
         collection_name=collection_name,
         metadatas=embeddings["metadatas"],
+        collection_metadata={
+            "video_title": video_metadata.title,
+            "channel_title": video_metadata.channel_title,
+            "video_id": video.video_id,
+            "name": name,  # corresponds to provided name argument
+        },
     )
 
 

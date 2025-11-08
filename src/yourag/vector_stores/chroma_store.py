@@ -127,7 +127,16 @@ class ChromaVectorStore(VectorStore):
                 name=collection_name, metadata=metadata, embedding_function=None
             )
         return collection
-    
+
+    def list_collections(self) -> List[str]:
+        """
+        Lists all collections in the Chroma vector store.
+
+        :return: A list of collection names.
+        """
+        collections = self.client.list_collections()
+        return [collection.name for collection in collections]
+
     def delete_collection(self, collection_name: str) -> None:
         """
         Deletes a collection from the Chroma vector store.
