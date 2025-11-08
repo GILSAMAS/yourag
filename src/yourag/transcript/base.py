@@ -2,6 +2,8 @@ from yourag.youtube.models import Transcript
 from typing import List, Dict, Any
 import re
 import uuid
+
+
 class TranscriptParser:
     """
     Parses and processes the transcript data.
@@ -14,7 +16,7 @@ class TranscriptParser:
         :param transcript: Transcript object obtained from YouTube API.
         :return: None
         """
-        self.transcript = transcript.entries # List of TranscriptEntry objects
+        self.transcript = transcript.entries  # List of TranscriptEntry objects
 
     def __get_word_count(self, text: str) -> int:
         """
@@ -45,7 +47,12 @@ class TranscriptParser:
             if word_count >= chunk_size:
                 chunk_text = " ".join(chunk)
                 chunks.append(
-                    {"text": chunk_text, "duration": t.end - t_start, "start": t_start, "end": t.end}
+                    {
+                        "text": chunk_text,
+                        "duration": t.end - t_start,
+                        "start": t_start,
+                        "end": t.end,
+                    }
                 )
                 # Reset for next chunk, keeping overlap
                 t_start = self.transcript[n].start
@@ -61,7 +68,12 @@ class TranscriptParser:
             if duration > 0 and n == len(self.transcript) - 1:
                 chunk_text = " ".join(chunk)
                 chunks.append(
-                    {"text": chunk_text, "duration": t.end - t_start, "start": t_start, "end": t.end}
+                    {
+                        "text": chunk_text,
+                        "duration": t.end - t_start,
+                        "start": t_start,
+                        "end": t.end,
+                    }
                 )
         return chunks
 
