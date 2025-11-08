@@ -17,3 +17,23 @@ def list_collections() -> None:
         collection = store.get_or_create_collection(collection_name)
         pprint(collection.metadata, indent=4)
         print("-" * 40)
+
+
+def get_store_parser(subparsers):
+    """
+    Creates the store subparser.
+
+    :param subparsers: The subparsers object from the main parser.
+    :return: The store subparser.
+    """
+    store_parser = subparsers.add_parser("store", help="Manage the vector store")
+    # Additional subcommands for store can be added here
+    store_parser.add_argument(
+        "-ls",
+        "--list",
+        action="store_true",
+        required=True,
+        help="List all collections in the vector store",
+    )
+
+    return store_parser

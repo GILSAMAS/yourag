@@ -3,13 +3,46 @@ from yourag.youtube.video import YTVideo
 from yourag.transcript.base import TranscriptParser
 from yourag.ai.embeddings import EmbeddingFactory
 from yourag.vector_stores.chroma_store import ChromaVectorStore
-from dotenv import load_dotenv
 import os
 import uuid
 from typing import Dict, List
+from yourag.utils.urls import extract_video_id
 
 
-def ingest_video(video_id: str, name: str) -> None:
+def get_ingest_parser(subparsers):
+    """
+    Creates the ingest subparser.
+
+    :param subparsers: The subparsers object from the main parser.
+    :return: The ingest subparser.
+    """
+    ingest_parser = subparsers.add_parser("ingest", help="Ingest a YouTube video")
+    video_group = ingest_parser.add_mutually_exclusive_group(required=True)
+    video_group.add_argument(
+        "-v",
+        "--video-id",
+        type=str,
+        help="The ID of the YouTube video to ingest",
+    )
+    video_group.add_argument(
+        "-u",
+        "--video-url",
+        type=str,
+        help="The URL of the YouTube video to ingest",
+    )
+    ingest_parser.add_argument(
+        "-n",
+        "--name",
+        required=False,
+        type=str,
+        help="The name to assign to the video collection",
+        default=ingest_parser.get_default("video-id"),
+    )
+
+    return ingest_parser
+
+
+def ingest_video(args) -> None:
     """
     This function ingests a Youtube Video by its ID,
     it creates a collection in Chroma vector store with the transcript chunks embeddings.
@@ -18,7 +51,14 @@ def ingest_video(video_id: str, name: str) -> None:
     :param video_id: The ID of the YouTube video to ingest.
     :return: None
     """
-    load_dotenv()
+    # get video ID from URL if necessary
+    if args.video_url or args.video_id:
+        video_id = extract_video_id(args.video_url) if args.video_url else args.video_id
+    else:
+        raise ValueError(
+            "Either video-url or video-id must be provided to ingest a video."
+        )
+
     print("Ingesting video with ID:", video_id)
     yt_client = YouTubeClient()
     video = YTVideo(video_id=video_id, client=yt_client)
@@ -42,7 +82,9 @@ def ingest_video(video_id: str, name: str) -> None:
             "video_title": video_metadata.title,
             "channel_title": video_metadata.channel_title,
             "video_id": video.video_id,
-            "name": name,  # corresponds to provided name argument
+            "name": (
+                args.name if args.name else video_metadata.title
+            ),  # corresponds to provided name argument
         },
     )
 
