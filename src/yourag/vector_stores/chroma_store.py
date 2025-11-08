@@ -127,6 +127,17 @@ class ChromaVectorStore(VectorStore):
                 name=collection_name, metadata=metadata, embedding_function=None
             )
         return collection
+    
+    def delete_collection(self, collection_name: str) -> None:
+        """
+        Deletes a collection from the Chroma vector store.
+
+        :param collection_name: The name of the Chroma collection to delete.
+        """
+        try:
+            self.client.delete_collection(name=collection_name)
+        except Exception as e:
+            print(f"Error deleting collection '{collection_name}': {e}")
 
     def delete_vectors(self, vector_ids: list) -> None:
         """
