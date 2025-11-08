@@ -71,8 +71,11 @@ def cli():
 
     if args.command == "ingest":
         from yourag.cli.commands.ingest import ingest_video
-
-        ingest_video(args.video_id, args.name)
+        if args.video_id or args.video_url:
+            video_id = (
+                args.video_id if args.video_id else extract_video_id(args.video_url)
+            )
+        ingest_video(video_id, args.name)
 
     elif args.command == "query":
         from yourag.cli.commands.query import query_video
