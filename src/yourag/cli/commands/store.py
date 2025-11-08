@@ -3,7 +3,7 @@ from typing import Optional
 from pprint import pprint
 
 
-def list_collections() -> None:
+def list_collections(args) -> None:
     """
     List all collections in the vector store.
     """
