@@ -1,4 +1,5 @@
 import argparse
+from yourag.utils.urls import extract_video_id
 
 
 def cli():
@@ -6,12 +7,18 @@ def cli():
     subparsers = parser.add_subparsers(dest="command")
 
     ingest_parser = subparsers.add_parser("ingest", help="Ingest a YouTube video")
-    ingest_parser.add_argument(
+    video_group = ingest_parser.add_mutually_exclusive_group(required=True)
+    video_group.add_argument(
         "-v",
         "--video-id",
-        required=True,
         type=str,
         help="The ID of the YouTube video to ingest",
+    )
+    video_group.add_argument(
+        "-u",
+        "--video-url",
+        type=str,
+        help="The URL of the YouTube video to ingest",
     )
     ingest_parser.add_argument(
         "-n",
@@ -23,12 +30,24 @@ def cli():
     )
 
     query_parser = subparsers.add_parser("query", help="Query a YouTube video")
-    query_parser.add_argument(
+    video_query_group = query_parser.add_mutually_exclusive_group(required=True)
+    video_query_group.add_argument(
         "-v",
         "--video-id",
-        required=True,
         type=str,
         help="The ID of the YouTube video to query",
+    )
+    video_query_group.add_argument(
+        "-u",
+        "--video-url",
+        type=str,
+        help="The URL of the YouTube video to query",
+    )
+    video_query_group.add_argument(
+        "-n",
+        "--name",
+        type=str,
+        help="The name of the video collection to query",
     )
     query_parser.add_argument(
         "-q",
@@ -58,7 +77,14 @@ def cli():
     elif args.command == "query":
         from yourag.cli.commands.query import query_video
 
-        query_video(args.video_id, args.query_text)
+        if args.video_id or args.video_url:
+            video_id = (
+                args.video_id if args.video_id else extract_video_id(args.video_url)
+            )
+        else:
+            video_id = None
+            name = args.name
+        query_video(video_id, args.query_text, name=name)
 
     elif args.command == "store":
         from yourag.cli.commands.store import list_collections

@@ -42,7 +42,7 @@ def ingest_video(video_id: str, name: str) -> None:
             "video_title": video_metadata.title,
             "channel_title": video_metadata.channel_title,
             "video_id": video.video_id,
-            "name": name  # corresponds to provided name argument
+            "name": name,  # corresponds to provided name argument
         },
     )
 

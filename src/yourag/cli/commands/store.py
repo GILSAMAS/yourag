@@ -2,6 +2,7 @@ from yourag.vector_stores.chroma_store import ChromaVectorStore
 from typing import Optional
 from pprint import pprint
 
+
 def list_collections() -> None:
     """
     List all collections in the vector store.

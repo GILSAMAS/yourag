@@ -136,7 +136,7 @@ class ChromaVectorStore(VectorStore):
         """
         collections = self.client.list_collections()
         return [collection.name for collection in collections]
-    
+
     def delete_collection(self, collection_name: str) -> None:
         """
         Deletes a collection from the Chroma vector store.
