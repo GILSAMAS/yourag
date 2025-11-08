@@ -17,6 +17,7 @@ class TranscriptParser:
         :return: None
         """
         self.transcript = transcript.entries  # List of TranscriptEntry objects
+        print(f"TranscriptParser initialized with {len(self.transcript)} entries.")
 
     def __get_word_count(self, text: str) -> int:
         """
@@ -76,17 +77,3 @@ class TranscriptParser:
                     }
                 )
         return chunks
-
-    # def transform_to_list(self, transcript: str) -> List[Dict[str, Any]]:
-    #     """
-    #     Parse the transcript string into a list of dictionaries with start, end, and text.
-
-    #     :param transcript: The transcript string in SRT format.
-    #     :return: A list of dictionaries with start, end, and text.
-    #     """
-    #     transcript_parsed = srt.parse(transcript)
-    #     transcript_list = [
-    #         {"text": t.content, "start": t.start, "end": t.end}
-    #         for t in transcript_parsed
-    #     ]
-    #     return transcript_list
