@@ -34,7 +34,7 @@ Repository = "https://github.com/GILSAMAS/yourag"
 Issues = "https://github.com/GILSAMAS/yourag/issues"
 
 [project.scripts]
-yourag = "yourag:main"
+yourag = "yourag.cli.main:cli"
 
 [dependency-groups]
 dev = [
