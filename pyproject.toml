@@ -1,6 +1,6 @@
 [project]
 name = "yourag"
-version = "0.1.0"
+version = "0.1.1"
 description = "Your tool for RAG on any source of knowledge"
 readme = "README.md"
 authors = [
