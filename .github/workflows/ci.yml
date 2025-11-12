@@ -1,5 +1,4 @@
-name: CI/CD Pipeline
-
+name: CI/CD PYPI
 on:
   push:
     branches: ["main", "develop"]
