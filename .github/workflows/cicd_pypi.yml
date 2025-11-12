@@ -151,27 +151,27 @@ jobs:
         git tag -a "v${{ steps.get_version.outputs.version }}" -m "Release v${{ steps.get_version.outputs.version }}"
         git push origin "v${{ steps.get_version.outputs.version }}"
         
-    - name: Generate changelog
-      if: steps.check_tag.outputs.exists == 'false'
-      id: changelog
-      run: |
-        # Get the previous tag
-        PREV_TAG=$(git tag -l --sort=-version:refname | head -n 2 | tail -n 1)
-        if [ -z "$PREV_TAG" ]; then
-          PREV_TAG=$(git rev-list --max-parents=0 HEAD)
-        fi
+    # - name: Generate changelog
+    #   if: steps.check_tag.outputs.exists == 'false'
+    #   id: changelog
+    #   run: |
+    #     # Get the previous tag
+    #     PREV_TAG=$(git tag -l --sort=-version:refname | head -n 2 | tail -n 1)
+    #     if [ -z "$PREV_TAG" ]; then
+    #       PREV_TAG=$(git rev-list --max-parents=0 HEAD)
+    #     fi
         
-        # Generate changelog
-        echo "Changes since $PREV_TAG:" > CHANGELOG.md
-        git log $PREV_TAG..HEAD --pretty=format:"- %s (%h)" >> CHANGELOG.md
+    #     # Generate changelog
+    #     echo "Changes since $PREV_TAG:" > CHANGELOG.md
+    #     git log $PREV_TAG..HEAD --pretty=format:"- %s (%h)" >> CHANGELOG.md
         
-        # Use a random delimiter to avoid conflicts
-        delimiter="EOF_$(uuidgen)"
-        {
-          echo "changelog<<${delimiter}"
-          cat CHANGELOG.md
-          echo "${delimiter}"
-        } >> $GITHUB_OUTPUT
+    #     # Use a random delimiter to avoid conflicts
+    #     delimiter="EOF_$(uuidgen)"
+    #     {
+    #       echo "changelog<<${delimiter}"
+    #       cat CHANGELOG.md
+    #       echo "${delimiter}"
+    #     } >> $GITHUB_OUTPUT
         
     - name: Create GitHub Release
       if: steps.check_tag.outputs.exists == 'false'
@@ -203,11 +203,11 @@ jobs:
           yourag query --name docker-video --query-text "How do I install this?"
           ```
           
-          ### What's Changed
+          # ### What's Changed
           
-          ${{ steps.changelog.outputs.changelog }}
+          # ${{ steps.changelog.outputs.changelog }}
           
-          **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.get_version.outputs.version }}...HEAD
+          # **Full Changelog**: https://github.com/${{ github.repository }}/compare/${{ steps.get_version.outputs.version }}...HEAD
         draft: false
         prerelease: false
         
