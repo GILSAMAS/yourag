@@ -8,8 +8,7 @@ Your tool for RAG on any source of knowledge.
 
 ## How to use 
 
-`
-yourag init --knowledge https://youtube.com/... --name docker-video
-yourag query --name docker-video --question "How do I install this?"
-yourag delete --name myvideo
-`
+```bash
+yourag ingest --video-url https://youtube.com/... --name docker-video
+yourag query-text --name docker-video -- "How do I install this?"
+```
