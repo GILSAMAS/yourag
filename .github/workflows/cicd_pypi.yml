@@ -165,10 +165,12 @@ jobs:
         echo "Changes since $PREV_TAG:" > CHANGELOG.md
         git log $PREV_TAG..HEAD --pretty=format:"- %s (%h)" >> CHANGELOG.md
         
+        # Use a random delimiter to avoid conflicts
+        delimiter="EOF_$(uuidgen)"
         {
-          echo "changelog<<CHANGELOG_EOF"
+          echo "changelog<<${delimiter}"
           cat CHANGELOG.md
-          echo "CHANGELOG_EOF"
+          echo "${delimiter}"
         } >> $GITHUB_OUTPUT
         
     - name: Create GitHub Release
