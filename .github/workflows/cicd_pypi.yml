@@ -165,9 +165,11 @@ jobs:
         echo "Changes since $PREV_TAG:" > CHANGELOG.md
         git log $PREV_TAG..HEAD --pretty=format:"- %s (%h)" >> CHANGELOG.md
         
-        echo "changelog<<EOF" >> $GITHUB_OUTPUT
-        cat CHANGELOG.md >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
+        {
+          echo "changelog<<CHANGELOG_EOF"
+          cat CHANGELOG.md
+          echo "CHANGELOG_EOF"
+        } >> $GITHUB_OUTPUT
         
     - name: Create GitHub Release
       if: steps.check_tag.outputs.exists == 'false'
@@ -195,9 +197,8 @@ jobs:
           ### Usage
           
           ```bash
-          yourag init --knowledge https://youtube.com/... --name docker-video
-          yourag query --name docker-video --question "How do I install this?"
-          yourag delete --name myvideo
+          yourag ingest --video-url https://youtube.com/... --name docker-video
+          yourag query --name docker-video --query-text "How do I install this?"
           ```
           
           ### What's Changed
